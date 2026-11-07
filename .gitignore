@@ -1,0 +1,14 @@
+### C#
+[Bb]in/
+[Oo]bj/
+.vs/
+*.suo
+*.user
+*.pdb
+*.nupkg
+
+### Windows
+Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
