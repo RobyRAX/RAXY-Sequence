@@ -21,12 +21,6 @@ namespace RAXY.Sequence
 
         public static IReadOnlyList<SequenceActor> ActiveActors => activeActors;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        static void RegisterSequenceActorResolver()
-        {
-            SequenceObjectTarget.ActorIdResolver = FindActorTransform;
-        }
-
         void OnEnable()
         {
             if (!activeActors.Contains(this))

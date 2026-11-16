@@ -91,40 +91,54 @@ namespace RAXY.Sequence
 
         string StartDescription => UsesManualStart ? startPosition.ToString() : "Current";
 
-        public override UniTask ExecuteAsync(CancellationToken ct = default)
+        public override async UniTask ExecuteAsync(CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
 
-            var t = target?.Resolve();
-            if (t == null)
+            var objectTransform = target?.Resolve();
+            if (objectTransform == null)
             {
                 Debug.LogWarning("[MoveObject] Skipping move because target could not be resolved.");
-                return UniTask.CompletedTask;
+                return;
             }
 
-            if (UsesManualStart)
+            bool hasCharCon = objectTransform.TryGetComponent(out CharacterController charCon);
+            bool wasCharConEnabled = hasCharCon && charCon.enabled;
+
+            if (wasCharConEnabled)
+                charCon.enabled = false;
+
+            try
             {
-                if (isLocal)
-                    t.localPosition = startPosition;
-                else
-                    t.position = startPosition;
-            }
+                if (UsesManualStart)
+                {
+                    if (isLocal)
+                        objectTransform.localPosition = startPosition;
+                    else
+                        objectTransform.position = startPosition;
+                }
 
-            if (duration <= 0f)
+                if (duration <= 0f)
+                {
+                    if (isLocal)
+                        objectTransform.localPosition = destination;
+                    else
+                        objectTransform.position = destination;
+
+                    return;
+                }
+
+                Tween tween = isLocal
+                    ? objectTransform.DOLocalMove(destination, duration).SetEase(ease)
+                    : objectTransform.DOMove(destination, duration).SetEase(ease);
+
+                await tween.AwaitTweenAsync(ct);
+            }
+            finally
             {
-                if (isLocal)
-                    t.localPosition = destination;
-                else
-                    t.position = destination;
-
-                return UniTask.CompletedTask;
+                if (wasCharConEnabled && charCon != null)
+                    charCon.enabled = true;
             }
-
-            Tween tween = isLocal
-                ? t.DOLocalMove(destination, duration).SetEase(ease)
-                : t.DOMove(destination, duration).SetEase(ease);
-
-            return tween.AwaitTweenAsync(ct);
         }
     }
 }

@@ -196,7 +196,7 @@ namespace RAXY.Sequence
             }
         }
 
-        public override UniTask ExecuteAsync(CancellationToken ct = default)
+        public override async UniTask ExecuteAsync(CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
 
@@ -204,91 +204,105 @@ namespace RAXY.Sequence
             if (t == null)
             {
                 Debug.LogWarning("[RotateObject] Skipping rotate because target could not be resolved.");
-                return UniTask.CompletedTask;
+                return;
             }
 
-            Vector3 destinationEuler;
+            bool hasCharCon = t.TryGetComponent(out CharacterController charCon);
+            bool wasCharConEnabled = hasCharCon && charCon.enabled;
 
-            if (destinationMode == RotateDestinationMode.Euler)
+            if (wasCharConEnabled)
+                charCon.enabled = false;
+
+            try
             {
-                if (UsesManualStart)
-                {
-                    if (isLocal)
-                        t.localEulerAngles = startRotation;
-                    else
-                        t.eulerAngles = startRotation;
-                }
+                Vector3 destinationEuler;
 
-                destinationEuler = destinationRotation;
-            }
-            else
-            {
-                if (!rotateX && !rotateY && !rotateZ)
+                if (destinationMode == RotateDestinationMode.Euler)
                 {
-                    Debug.LogWarning("[RotateObject] Skipping rotate because no rotation axis is enabled.");
-                    return UniTask.CompletedTask;
-                }
+                    if (UsesManualStart)
+                    {
+                        if (isLocal)
+                            t.localEulerAngles = startRotation;
+                        else
+                            t.eulerAngles = startRotation;
+                    }
 
-                var lt = lookTarget?.Resolve();
-                if (lt == null)
-                {
-                    Debug.LogWarning("[RotateObject] Skipping rotate because look target could not be resolved.");
-                    return UniTask.CompletedTask;
-                }
-
-                Vector3 direction = lt.position - t.position;
-                if (direction.sqrMagnitude <= 1e-6f)
-                {
-                    Debug.LogWarning("[RotateObject] Skipping rotate because source and look target positions coincide.");
-                    return UniTask.CompletedTask;
-                }
-
-                if (UsesManualStart)
-                {
-                    if (isLocal)
-                        t.localEulerAngles = startRotation;
-                    else
-                        t.eulerAngles = startRotation;
-                }
-
-                Vector3 up = Mathf.Abs(Vector3.Dot(direction.normalized, Vector3.up)) > 0.9999f ? Vector3.forward : Vector3.up;
-                Quaternion worldLookRotation = Quaternion.LookRotation(direction, up);
-
-                Vector3 lookEuler;
-                if (isLocal && t.parent != null)
-                {
-                    Quaternion localLookRotation = Quaternion.Inverse(t.parent.rotation) * worldLookRotation;
-                    lookEuler = localLookRotation.eulerAngles;
+                    destinationEuler = destinationRotation;
                 }
                 else
                 {
-                    lookEuler = worldLookRotation.eulerAngles;
+                    if (!rotateX && !rotateY && !rotateZ)
+                    {
+                        Debug.LogWarning("[RotateObject] Skipping rotate because no rotation axis is enabled.");
+                        return;
+                    }
+
+                    var lt = lookTarget?.Resolve();
+                    if (lt == null)
+                    {
+                        Debug.LogWarning("[RotateObject] Skipping rotate because look target could not be resolved.");
+                        return;
+                    }
+
+                    Vector3 direction = lt.position - t.position;
+                    if (direction.sqrMagnitude <= 1e-6f)
+                    {
+                        Debug.LogWarning("[RotateObject] Skipping rotate because source and look target positions coincide.");
+                        return;
+                    }
+
+                    if (UsesManualStart)
+                    {
+                        if (isLocal)
+                            t.localEulerAngles = startRotation;
+                        else
+                            t.eulerAngles = startRotation;
+                    }
+
+                    Vector3 up = Mathf.Abs(Vector3.Dot(direction.normalized, Vector3.up)) > 0.9999f ? Vector3.forward : Vector3.up;
+                    Quaternion worldLookRotation = Quaternion.LookRotation(direction, up);
+
+                    Vector3 lookEuler;
+                    if (isLocal && t.parent != null)
+                    {
+                        Quaternion localLookRotation = Quaternion.Inverse(t.parent.rotation) * worldLookRotation;
+                        lookEuler = localLookRotation.eulerAngles;
+                    }
+                    else
+                    {
+                        lookEuler = worldLookRotation.eulerAngles;
+                    }
+
+                    Vector3 currentEuler = isLocal ? t.localEulerAngles : t.eulerAngles;
+
+                    destinationEuler = new Vector3(
+                        rotateX ? lookEuler.x : currentEuler.x,
+                        rotateY ? lookEuler.y : currentEuler.y,
+                        rotateZ ? lookEuler.z : currentEuler.z
+                    );
                 }
 
-                Vector3 currentEuler = isLocal ? t.localEulerAngles : t.eulerAngles;
+                if (duration <= 0f)
+                {
+                    if (isLocal)
+                        t.localEulerAngles = destinationEuler;
+                    else
+                        t.eulerAngles = destinationEuler;
 
-                destinationEuler = new Vector3(
-                    rotateX ? lookEuler.x : currentEuler.x,
-                    rotateY ? lookEuler.y : currentEuler.y,
-                    rotateZ ? lookEuler.z : currentEuler.z
-                );
+                    return;
+                }
+
+                Tween tween = isLocal
+                    ? t.DOLocalRotate(destinationEuler, duration, rotateMode).SetEase(ease)
+                    : t.DORotate(destinationEuler, duration, rotateMode).SetEase(ease);
+
+                await tween.AwaitTweenAsync(ct);
             }
-
-            if (duration <= 0f)
+            finally
             {
-                if (isLocal)
-                    t.localEulerAngles = destinationEuler;
-                else
-                    t.eulerAngles = destinationEuler;
-
-                return UniTask.CompletedTask;
+                if (wasCharConEnabled && charCon != null)
+                    charCon.enabled = true;
             }
-
-            Tween tween = isLocal
-                ? t.DOLocalRotate(destinationEuler, duration, rotateMode).SetEase(ease)
-                : t.DORotate(destinationEuler, duration, rotateMode).SetEase(ease);
-
-            return tween.AwaitTweenAsync(ct);
         }
     }
 }

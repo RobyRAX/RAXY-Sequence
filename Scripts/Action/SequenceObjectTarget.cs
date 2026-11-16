@@ -19,8 +19,6 @@ namespace RAXY.Sequence
     [Serializable]
     public class SequenceObjectTarget
     {
-        public static Func<string, Transform> ActorIdResolver { get; set; }
-
         [HorizontalGroup("Target", LabelWidth = 90)]
         [LabelText("Target Type")]
         public SequenceTargetMode targetMode = SequenceTargetMode.GameObjectName;
@@ -49,13 +47,14 @@ namespace RAXY.Sequence
                     return null;
                 }
 
-                if (ActorIdResolver == null)
+                var allActors = GameObject.FindObjectsByType<SequenceActor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (var actor in allActors)
                 {
-                    Debug.LogWarning("[SequenceObjectTarget] No actor ID resolver is registered.");
-                    return null;
+                    if (actor.ActorId == actorId)
+                    {
+                        return actor.transform;
+                    }
                 }
-
-                return ActorIdResolver(actorId);
             }
 
             if (targetMode == SequenceTargetMode.GameObjectName)
