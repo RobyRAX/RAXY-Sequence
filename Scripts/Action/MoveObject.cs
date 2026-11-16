@@ -51,22 +51,36 @@ namespace RAXY.Sequence
                     target.actorId = actor.ActorId;
                 }
             }
+        }
 
-            helper_gameObject = null;
+        [HorizontalGroup("Helper/Btn")]
+        [Button]
+        void Find()
+        {
+            helper_gameObject = target.Resolve().gameObject;
         }
 
         [HorizontalGroup("Helper/Btn")]
         [Button]
         void SetStart()
         {
-            
+            var selected = helper_gameObject.transform;
+            if (selected == null)
+                return;
+
+            startPosition = isLocal ? selected.localPosition : selected.position;
+            startMode = SequenceTransformStartMode.Manual;
         }
 
         [HorizontalGroup("Helper/Btn")]
         [Button]
         void SetDestination()
         {
-            
+            var selected = helper_gameObject.transform;
+            if (selected == null)
+                return;
+
+            destination = isLocal ? selected.localPosition : selected.position;
         }
 #endif
 
