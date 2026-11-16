@@ -3,7 +3,8 @@
     "rootNamespace": "RAXY.Sequence",
     "references": [
         "UniTask",
-        "RAXY.Event"
+        "RAXY.Event",
+        "DOTween.Modules"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
