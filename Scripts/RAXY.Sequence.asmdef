@@ -2,7 +2,8 @@
     "name": "RAXY.Sequence",
     "rootNamespace": "RAXY.Sequence",
     "references": [
-        "UniTask"
+        "UniTask",
+        "RAXY.Event"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
