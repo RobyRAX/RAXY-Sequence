@@ -30,7 +30,7 @@ namespace RAXY.Sequence
             set => overrideNextActionTime = value;
         }
 
-        public virtual float NextActionTime
+        public virtual float NextActionTimeOverrider
         {
             get => nextActionTime;
             set => nextActionTime = value;

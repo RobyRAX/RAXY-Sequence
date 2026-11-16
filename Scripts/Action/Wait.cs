@@ -7,21 +7,21 @@ using UnityEngine;
 namespace RAXY.Sequence
 {
     [Serializable]
-    public class Wait : SequenceableBase
+    public class Wait : ISequenceable
     {
         [MinValue(0f)]
         [SuffixLabel("s", true)]
         [Tooltip("Duration to wait in seconds.")]
         public float duration;
 
-        public override string Label => $"Wait ({duration}s)";
+        public string Label => $"Wait ({duration}s)";
 
-        public override UniTask ExecuteAsync(CancellationToken ct = default)
+        public async UniTask ExecuteAsync(CancellationToken ct = default)
         {
             if (duration <= 0f)
-                return UniTask.CompletedTask;
+                return;
 
-            return UniTask.Delay(TimeSpan.FromSeconds(duration), cancellationToken: ct);
+            await UniTask.Delay(TimeSpan.FromSeconds(duration), cancellationToken: ct);
         }
     }
 }

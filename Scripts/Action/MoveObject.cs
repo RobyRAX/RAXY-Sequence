@@ -20,7 +20,6 @@ namespace RAXY.Sequence
         [LabelText("Start")]
         public Vector3 startPosition;
 
-        [LabelText("To")]
         public Vector3 destination;
 
         [MinValue(0f)]
@@ -31,6 +30,45 @@ namespace RAXY.Sequence
         public bool isLocal;
 
         public Ease ease = Ease.Linear;
+
+#if UNITY_EDITOR
+        [TitleGroup("Helper")]
+        [ShowInInspector]
+        [OnValueChanged(nameof(OnHelperGameObjectChanged))]
+        GameObject helper_gameObject;
+
+        void OnHelperGameObjectChanged()
+        {
+            if (helper_gameObject == null)
+                return;
+
+            if (target.targetMode == SequenceTargetMode.GameObjectName)
+                target.gameObjectName = helper_gameObject.name;
+            else if (target.targetMode == SequenceTargetMode.ActorId)
+            {
+                if (helper_gameObject.TryGetComponent(out SequenceActor actor))
+                {
+                    target.actorId = actor.ActorId;
+                }
+            }
+
+            helper_gameObject = null;
+        }
+
+        [HorizontalGroup("Helper/Btn")]
+        [Button]
+        void SetStart()
+        {
+            
+        }
+
+        [HorizontalGroup("Helper/Btn")]
+        [Button]
+        void SetDestination()
+        {
+            
+        }
+#endif
 
         public override string Label =>
             $"MoveObject ({(target != null ? target.TargetDescription : "None")}) {StartDescription} -> {destination} ({(isLocal ? "Local" : "World")}, {duration}s)";

@@ -41,7 +41,7 @@ namespace RAXY.Sequence
                             startedTasks ??= new List<UniTask>();
                             startedTasks.Add(actionTask);
 
-                            float delay = Mathf.Max(0f, action.NextActionTime);
+                            float delay = Mathf.Max(0f, action.NextActionTimeOverrider);
                             if (delay > 0f)
                             {
                                 await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: ct);

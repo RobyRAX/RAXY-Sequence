@@ -9,7 +9,7 @@ namespace RAXY.Sequence
 
         bool OverrideNextActionTime => false;
 
-        float NextActionTime => 0f;
+        float NextActionTimeOverrider => 0f;
 
         UniTask ExecuteAsync(CancellationToken ct = default);
     }
