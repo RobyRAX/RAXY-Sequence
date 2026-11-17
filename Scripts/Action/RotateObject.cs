@@ -203,9 +203,11 @@ namespace RAXY.Sequence
             var t = target?.Resolve();
             if (t == null)
             {
-                Debug.LogWarning("[RotateObject] Skipping rotate because target could not be resolved.");
+                Debug.LogWarning($"[CutsceneDebug/Rotate] Target unresolved: {target?.TargetDescription ?? "null"}; frame={Time.frameCount}.");
                 return;
             }
+
+            Debug.Log($"[CutsceneDebug/Rotate] Start: target={t.name} id={t.GetInstanceID()} active={t.gameObject.activeInHierarchy} position={t.position} rotation={t.eulerAngles} lookTarget={lookTarget?.TargetDescription ?? "null"} frame={Time.frameCount}.", t);
 
             bool hasCharCon = t.TryGetComponent(out CharacterController charCon);
             bool wasCharConEnabled = hasCharCon && charCon.enabled;
@@ -240,9 +242,11 @@ namespace RAXY.Sequence
                     var lt = lookTarget?.Resolve();
                     if (lt == null)
                     {
-                        Debug.LogWarning("[RotateObject] Skipping rotate because look target could not be resolved.");
+                        Debug.LogWarning($"[CutsceneDebug/Rotate] Look target unresolved: {lookTarget?.TargetDescription ?? "null"}; frame={Time.frameCount}.", t);
                         return;
                     }
+
+                    Debug.Log($"[CutsceneDebug/Rotate] Look target: name={lt.name} id={lt.GetInstanceID()} active={lt.gameObject.activeInHierarchy} position={lt.position} frame={Time.frameCount}.", lt);
 
                     Vector3 direction = lt.position - t.position;
                     if (direction.sqrMagnitude <= 1e-6f)
@@ -289,6 +293,12 @@ namespace RAXY.Sequence
                     else
                         t.eulerAngles = destinationEuler;
 
+                    Debug.Log($"[CutsceneDebug/Rotate] Set: target={t.name} rotation={t.eulerAngles} destination={destinationEuler} frame={Time.frameCount}.", t);
+
+                    await UniTask.Yield();
+
+                    Debug.Log($"[CutsceneDebug/Rotate] After yield: target={t.name} rotation={t.eulerAngles} frame={Time.frameCount}.", t);
+
                     return;
                 }
 
@@ -297,6 +307,7 @@ namespace RAXY.Sequence
                     : t.DORotate(destinationEuler, duration, rotateMode).SetEase(ease);
 
                 await tween.AwaitTweenAsync(ct);
+                Debug.Log($"[CutsceneDebug/Rotate] Tween complete: target={t.name} rotation={t.eulerAngles} frame={Time.frameCount}.", t);
             }
             finally
             {

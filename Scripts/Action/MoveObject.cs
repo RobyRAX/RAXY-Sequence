@@ -98,9 +98,11 @@ namespace RAXY.Sequence
             var objectTransform = target?.Resolve();
             if (objectTransform == null)
             {
-                Debug.LogWarning("[MoveObject] Skipping move because target could not be resolved.");
+                Debug.LogWarning($"[CutsceneDebug/Move] Target unresolved: {target?.TargetDescription ?? "null"}; frame={Time.frameCount}.");
                 return;
             }
+
+            Debug.Log($"[CutsceneDebug/Move] Start: target={objectTransform.name} id={objectTransform.GetInstanceID()} active={objectTransform.gameObject.activeInHierarchy} position={objectTransform.position} destination={destination} duration={duration} frame={Time.frameCount}.", objectTransform);
 
             bool hasCharCon = objectTransform.TryGetComponent(out CharacterController charCon);
             bool wasCharConEnabled = hasCharCon && charCon.enabled;
@@ -125,6 +127,12 @@ namespace RAXY.Sequence
                     else
                         objectTransform.position = destination;
 
+                    Debug.Log($"[CutsceneDebug/Move] Set: target={objectTransform.name} position={objectTransform.position} frame={Time.frameCount}.", objectTransform);
+
+                    await UniTask.Yield();
+
+                    Debug.Log($"[CutsceneDebug/Move] After yield: target={objectTransform.name} position={objectTransform.position} frame={Time.frameCount}.", objectTransform);
+
                     return;
                 }
 
@@ -133,6 +141,7 @@ namespace RAXY.Sequence
                     : objectTransform.DOMove(destination, duration).SetEase(ease);
 
                 await tween.AwaitTweenAsync(ct);
+                Debug.Log($"[CutsceneDebug/Move] Tween complete: target={objectTransform.name} position={objectTransform.position} frame={Time.frameCount}.", objectTransform);
             }
             finally
             {
