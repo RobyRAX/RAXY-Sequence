@@ -68,7 +68,21 @@ namespace RAXY.Sequence
                 var go = GameObject.Find(gameObjectName);
                 if (go == null)
                 {
-                    Debug.LogWarning($"[SequenceObjectTarget] No active GameObject named '{gameObjectName}' was found.");
+                    var transforms = UnityEngine.Object.FindObjectsByType<Transform>(
+                        FindObjectsInactive.Include, FindObjectsSortMode.None);
+                    foreach (var transform in transforms)
+                    {
+                        if (transform.name == gameObjectName)
+                        {
+                            go = transform.gameObject;
+                            break;
+                        }
+                    }
+                }
+
+                if (go == null)
+                {
+                    Debug.LogWarning($"[SequenceObjectTarget] No GameObject named '{gameObjectName}' was found.");
                     return null;
                 }
 
